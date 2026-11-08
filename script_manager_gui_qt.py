@@ -2908,29 +2908,26 @@ class MainWindow(QMainWindow):
         self.refresh_grid()
 
     def setup_icon(self):
-        # We use a shared utility to ensure the icon is set from a file source
-        # Windows taskbar is much more reliable when loading from a disk-based asset
-        icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon_v3.png")
-        
+        # Load taskbar and window icon from icon.svg (with fallback to app_icon_v3.png)
+        app_dir = os.path.dirname(os.path.abspath(__file__))
+        icon_path = os.path.join(app_dir, "icon.svg")
         if not os.path.exists(icon_path):
-            # Generate the icon file if it doesn't exist
-            pixmap = QPixmap(256, 256)
-            pixmap.fill(Qt.GlobalColor.transparent)
-            painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            
-            # Draw Background Square with Rounded Corners
-            painter.setBrush(QBrush(QColor(CP_BG)))
-            painter.setPen(QColor(CP_CYAN)) # Cyan border
-            painter.drawRoundedRect(10, 10, 236, 236, 40, 40)
-            
-            # Draw </> text
-            painter.setPen(QColor(CP_YELLOW))
-            font = QFont("Consolas", 120, QFont.Weight.Bold)
-            painter.setFont(font)
-            painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "</>")
-            painter.end()
-            pixmap.save(icon_path)
+            icon_path = os.path.join(app_dir, "app_icon_v3.png")
+            if not os.path.exists(icon_path):
+                # Generate fallback icon file if neither exists
+                pixmap = QPixmap(256, 256)
+                pixmap.fill(Qt.GlobalColor.transparent)
+                painter = QPainter(pixmap)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                painter.setBrush(QBrush(QColor(CP_BG)))
+                painter.setPen(QColor(CP_CYAN))
+                painter.drawRoundedRect(10, 10, 236, 236, 40, 40)
+                painter.setPen(QColor(CP_YELLOW))
+                font = QFont("Consolas", 120, QFont.Weight.Bold)
+                painter.setFont(font)
+                painter.drawText(pixmap.rect(), Qt.AlignmentFlag.AlignCenter, "</>")
+                painter.end()
+                pixmap.save(icon_path)
 
         icon = QIcon(icon_path)
         self.setWindowIcon(icon)
@@ -4028,8 +4025,11 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
-    # Set app-wide icon immediately
-    icon_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_icon_v3.png")
+    # Set app-wide icon immediately from icon.svg (with fallback to app_icon_v3.png)
+    app_dir = os.path.dirname(os.path.abspath(__file__))
+    icon_path = os.path.join(app_dir, "icon.svg")
+    if not os.path.exists(icon_path):
+        icon_path = os.path.join(app_dir, "app_icon_v3.png")
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
         
