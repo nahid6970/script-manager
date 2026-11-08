@@ -2901,6 +2901,14 @@ class MainWindow(QMainWindow):
         w = self.config.get("window_width", 1100)
         h = self.config.get("window_height", 800)
         self.resize(w, h)
+        
+        # Center window on screen
+        screen_geometry = self.screen().availableGeometry() if hasattr(self, 'screen') and self.screen() else QApplication.primaryScreen().availableGeometry()
+        self.move(
+            screen_geometry.x() + (screen_geometry.width() - w) // 2,
+            screen_geometry.y() + (screen_geometry.height() - h) // 2
+        )
+
         if self.config.get("always_on_top", False):
             self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         
@@ -2936,6 +2944,17 @@ class MainWindow(QMainWindow):
         # Delayed re-apply to handle cases where Windows taskbar is slow to update
         QTimer.singleShot(100, lambda: self.setWindowIcon(icon))
         QTimer.singleShot(500, lambda: self.setWindowIcon(icon))
+
+        # Enable WS_MINIMIZEBOX on Windows so taskbar icon click minimizes/restores frameless window
+        if os.name == 'nt':
+            try:
+                hwnd = int(self.winId())
+                GWL_STYLE = -16
+                WS_MINIMIZEBOX = 0x00020000
+                style = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_STYLE)
+                ctypes.windll.user32.SetWindowLongW(hwnd, GWL_STYLE, style | WS_MINIMIZEBOX)
+            except Exception:
+                pass
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
